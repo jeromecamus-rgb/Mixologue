@@ -6,8 +6,9 @@ export default async function handler(req, res) {
   if (!apiKey) {
     return res.status(500).json({ error: 'API key not configured' });
   }
+  console.log("API Key starts with:", apiKey.slice(0,10));
+  console.log("Model:", req.body.model);
   try {
-    console.log("Calling Anthropic API...");
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -19,6 +20,7 @@ export default async function handler(req, res) {
     });
     console.log("Response status:", response.status);
     const data = await response.json();
+    console.log("Response error:", JSON.stringify(data.error));
     return res.status(response.status).json(data);
   } catch (error) {
     console.log("Error:", error.message);
