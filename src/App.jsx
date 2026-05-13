@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
+const ANTHROPIC_API_KEY = "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";
+
 // ── Supabase config ──────────────────────────────────────────────────────────
 const SUPABASE_URL = "https://wsyraircfrkahootaxsa.supabase.co";
 const SUPABASE_KEY = "sb_publishable_6PR9h05uWAM2TOMd8W6mNQ_1yPOiosN";
@@ -1257,9 +1259,9 @@ async function fetchCocktailTags(name, ingredients) {
     const ingredientList = (ingredients||[]).length
       ? `Ingredients: ${(ingredients||[]).map(i => i.name || i).join(", ")}.`
       : "";
-    const response = await fetch("/api/claude", {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
         max_tokens: 150,
@@ -2398,9 +2400,9 @@ Prioritize Difford's Guide cocktails when equally relevant, but NEVER sacrifice 
 For the recipe, always use the Difford's Guide version when available.
 Do NOT repeat the same cocktail twice.`;
 
-  const response = await fetch("/api/claude", {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 3000,
@@ -2414,6 +2416,7 @@ Always respond with raw JSON only — no markdown, no explanation, no text outsi
     }),
   });
   const data = await response.json();
+  console.log("API response status:", response.status, "data:", JSON.stringify(data).slice(0,200));
   if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
   const text = (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
   const clean = text.replace(/```json|```/g,"").trim();
@@ -2451,9 +2454,9 @@ async function fetchCreatedCocktail(ingredients, tasteProfile) {
   const profileContext = tasteProfile.length > 0
     ? `User taste profile: ${tasteProfile.map(t => t.tag).join(", ")}.`
     : "";
-  const response = await fetch("/api/claude", {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 1000,
@@ -2465,6 +2468,7 @@ Return ONLY a raw JSON object, no markdown:
     }),
   });
   const data = await response.json();
+  console.log("API response status:", response.status, "data:", JSON.stringify(data).slice(0,200));
   if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
   const text = (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
   const clean = text.replace(/```json|```/g,"").trim();
@@ -2474,9 +2478,9 @@ Return ONLY a raw JSON object, no markdown:
 }
 
 async function fetchRecipeFromClaude(name) {
-  const response = await fetch("/api/claude", {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 800,
@@ -2491,6 +2495,7 @@ Use this exact structure:
     }),
   });
   const data = await response.json();
+  console.log("API response status:", response.status, "data:", JSON.stringify(data).slice(0,200));
   if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
   const text = (data.content||[]).filter(b => b.type==="text").map(b => b.text).join("");
   const clean = text.replace(/```json|```/g,"").trim();
@@ -2631,9 +2636,9 @@ function RecipeCard({ name, localRecipe, onClose, onFavorite, isFavorite, onChan
       const r = localRecipe || recipe;
       const ings = (r?.ingredients || []).map(i => i.name || i).filter(Boolean).join(", ");
       const desc = r?.description || name;
-      const res = await fetch("/api/claude", {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 100,
@@ -3063,7 +3068,7 @@ export default function MixologueApp() {
           mode: "classique_mixologue",
         });
         setProposals(result);
-      } catch(e) { setRecsError(true); }
+      } catch(e) { console.error("fetchRecs error:", e); setRecsError(true); }
       setLoadingRecs(false);
     }
   }
@@ -3191,9 +3196,9 @@ export default function MixologueApp() {
     setNameLoading(true);
     setNameError(false);
     try {
-      const response = await fetch("/api/claude", {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 600,
